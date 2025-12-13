@@ -1,21 +1,24 @@
-const {validationResult} = require('express-validator');
-const PaymentType = require('../models/PaymentType');
-const {sendSuccess, sendError, validationFailed} = require('../utils/response');
+const { validationResult } = require("express-validator");
+const PaymentType = require("../models/PaymentType");
+const {
+  sendSuccess,
+  sendError,
+  validationFailed,
+} = require("../utils/response");
 
 async function createPaymentType(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return validationFailed(res, errors.array());
   try {
-    const payload =
-        req.body;  // {name, pass, type, amount_per_person?, date_created?}
+    const payload = req.body; // {name, pass, type, amount_per_person?, date_created?}
     const pt = await PaymentType.create(payload);
-    return sendSuccess(res, {payment_type: pt}, {status: 201});
+    return sendSuccess(res, { paymentType: pt }, { status: 201 });
   } catch (err) {
-    if (err && err.code === '23505') {
+    if (err && err.code === "23505") {
       return sendError(res, {
         status: 409,
-        message: 'Duplicate name',
-        code: 'DUPLICATE_PAYMENT_TYPE'
+        message: "Duplicate name",
+        code: "DUPLICATE_PAYMENT_TYPE",
       });
     }
     console.error(err);
@@ -23,11 +26,11 @@ async function createPaymentType(req, res) {
   }
 }
 
-module.exports = {createPaymentType};
+module.exports = { createPaymentType };
 async function listPaymentTypes(_req, res) {
   try {
     const list = await PaymentType.list();
-    return sendSuccess(res, {payment_types: list});
+    return sendSuccess(res, { paymentTypes: list });
   } catch (err) {
     console.error(err);
     return sendError(res);
@@ -41,11 +44,26 @@ async function getPaymentTypeById(req, res) {
     if (!item) {
       return sendError(res, {
         status: 404,
-        message: 'Payment type not found',
-        code: 'PAYMENT_TYPE_NOT_FOUND'
+        message: "Payment type not found",
+        code: "PAYMENT_TYPE_NOT_FOUND",
       });
     }
-    return sendSuccess(res, {payment_type: item});
+    return sendSuccess(res, { paymentType: item });
+  } catch (err) {
+    console.error(err);
+    return sendError(res);
+  }
+}
+
+async function updatePaymentType(req, res) {
+  const id = req.params.id;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return validationFailed(res, errors.array());
+
+  try {
+    const payload = req.body;
+    const pt = await PaymentType.update(id, payload);
+    return sendSuccess(res, { paymentType: pt });
   } catch (err) {
     console.error(err);
     return sendError(res);
@@ -55,5 +73,6 @@ async function getPaymentTypeById(req, res) {
 module.exports = {
   createPaymentType,
   listPaymentTypes,
-  getPaymentTypeById
+  getPaymentTypeById,
+  updatePaymentType,
 };
